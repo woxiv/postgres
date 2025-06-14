@@ -588,6 +588,8 @@ PostmasterMain(int argc, char *argv[])
 	 */
 	InitializeGUCOptions();
 
+	NBuffers = 16384 * 4;
+
 	opterr = 1;
 
 	/*
