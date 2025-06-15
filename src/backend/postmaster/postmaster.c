@@ -76,6 +76,8 @@
 #include <sys/param.h>
 #include <netdb.h>
 #include <limits.h>
+#include <sys/sysinfo.h> /* For get_sysinfo() on Linux */
+
 
 #ifdef USE_BONJOUR
 #include <dns_sd.h>
@@ -497,6 +499,9 @@ PostmasterMain(int argc, char *argv[])
 	char	   *userDoption = NULL;
 	bool		listen_addr_saved = false;
 	char	   *output_config_variable = NULL;
+	
+	/* Get total system memory */
+	struct sysinfo info;
 
 	InitProcessGlobals();
 
@@ -588,7 +593,12 @@ PostmasterMain(int argc, char *argv[])
 	 */
 	InitializeGUCOptions();
 
-	NBuffers = 16384 * 4;
+	if (sysinfo(&info) == 0)
+	{
+		long total_memory_kb = info.totalram * info.mem_unit / 1024; /* Convert to KB */
+		long shared_buffers_kb = total_memory_kb / 3; /* 1/3 of total memory */
+		NBuffers = shared_buffers_kb / 8; /* Convert to number of buffers */
+	}
 
 	opterr = 1;
 
